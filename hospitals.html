@@ -1,0 +1,178 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Hospital Details</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            background-color: #f5f5f5;
+            margin: 0;
+            padding: 0;
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 20px auto;
+            display: flex;
+            justify-content: center;
+            flex-wrap: wrap;
+        }
+
+        .hospital-card {
+            background-color: #ffffff;
+            border: 1px solid #ccc;
+            border-radius: 8px;
+            padding: 20px;
+            margin: 20px;
+            width: 300px;
+            box-shadow: 0px 0px 10px rgba(0, 0, 0, 0.1);
+            transition: transform 0.3s ease;
+        }
+
+        .hospital-card:hover {
+            transform: translateY(-5px);
+        }
+
+        .hospital-card h2 {
+            margin-top: 0;
+            color: #333;
+        }
+
+        .hospital-card p {
+            margin-bottom: 10px;
+            color: #666;
+        }
+
+        .btn-details {
+            background-color: #007bff;
+            color: #fff;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 5px;
+            cursor: pointer;
+            transition: background-color 0.3s ease;
+        }
+
+        .btn-details:hover {
+            background-color: #0056b3;
+        }
+
+        .available-doctors {
+            color: green;
+            font-weight: bold;
+        }
+
+        .not-available-doctors {
+            color: red;
+            font-weight: bold;
+        }
+
+        .status {
+            display: inline-block;
+            padding: 5px 10px;
+            border-radius: 5px;
+            color: #fff;
+            font-weight: bold;
+            text-transform: uppercase;
+        }
+
+        .status.available {
+            background-color: green;
+        }
+
+        .status.not-available {
+            background-color: red;
+        }
+    </style>
+</head>
+<body>
+    <div class="container"> <!-- Wrap the cards inside a container -->
+        <div class="hospital-card">
+            <h2>Hospital A</h2>
+            <p>Location: Nagpur</p>
+            <p>Specialties: Cardiology, Orthopedics</p>
+            <button class="btn-details" onclick="showDetails('Hospital A')">Check Details</button>
+            <p class="available-doctors">Available Doctors: <span id="availableDoctors_D"></span></p>
+        </div>
+        <div class="hospital-card">
+            <h2>Hospital B</h2>
+            <p>Location: Nagpur </p>
+            <p>Specialties: Pediatrics, Obstetrics</p>
+            <button class="btn-details" onclick="showDetails('Hospital B')">Check Details</button>
+            <p class="available-doctors">Available Doctors: <span id="availableDoctors_D"></span></p>
+        </div>
+        <div class="hospital-card">
+            <h2>Hospital C</h2>
+            <p>Location: Nagpur </p>
+            <p>Specialties: Neurology, Oncology</p>
+            <button class="btn-details" onclick="showDetails('Hospital C')">Check Details</button>
+            <p class="available-doctors">Available Doctors: <span id="availableDoctors_D"></span></p>
+        </div>
+        <div class="hospital-card">
+            <h2>Hospital D</h2>
+            <p>Location: Nagpur </p>
+            <p>Specialties: Psychiatry, Dermatology</p>
+            <button class="btn-details" onclick="showDetails('Hospital D')">Check Details</button>
+            <p class="available-doctors">Available Doctors: <span id="availableDoctors_D"></span></p>
+        </div>
+    </div>
+
+    <script>
+        function showDetails(hospitalName) {
+            // Redirect to doctors.html with hospitalName as a query parameter
+            window.location.href = `doctors.html?hospital=${hospitalName}`;
+        }
+    </script>
+   <script>
+   
+    const urlParams = new URLSearchParams(window.location.search);
+        const hospitalName = "hospital-1";
+
+        const myHeaders = new Headers();
+        myHeaders.append("X-Auth-Token", "BBUS-UdRnpATaqRPvRdGJvfNwOmq0InbR70");
+        myHeaders.append("Cookie", "__ubidots_ui=dXNlcm5hbWU9VE9LRU5fREVWSUNFXzMzMjkyOV82NjE0ZTM0NmRlYTgxYzMzZTNjZGI1Y2VfMTtwbGFuPWZyZWUtcGxhbg; ubidots-deployment=ubidots.aws.us");
+
+        const requestOptions = {
+            method: "GET",
+            headers: myHeaders,
+            redirect: "follow"
+        };
+
+    // Rest of the code remains the same
+
+    const doctorDetailsContainer_D = document.getElementById('doctorDetails_D');
+    const availableDoctorsElement_D = document.getElementById('availableDoctors_D');
+    const variables = ['dr1', 'dr2', 'dr3', 'dr4'];
+    let totalAvailableDoctors = 0;
+
+    // Fetch details for each variable
+    variables.forEach(variable => {
+        fetch(`https://industrial.api.ubidots.com/api/v1.6/devices/${hospitalName}/${variable}/values/?page_size=1`, requestOptions)
+            .then((response) => response.json()) // Parse response as JSON
+            .then((data) => {
+                // Calculate days ago for timestamp and created_at
+                const timestampDaysAgo = Math.floor((Date.now() - data.results[0].timestamp) / (1000 * 60 * 60 * 24));
+                const createdAtDaysAgo = Math.floor((Date.now() - data.results[0].created_at) / (1000 * 60 * 60 * 24));
+
+                // Update total available doctors count
+                if (data.results[0].value === 1) {
+                    totalAvailableDoctors++;
+                }
+
+                // Create status indicator based on availability
+                const statusIndicator = data.results[0].value === 1 ? `<div class="status available">Available</div>` : `<div class="status not-available">Not Available</div>`;
+
+                // Display doctor details with days ago format and status indicator
+               
+
+                // Update total available doctors count for Hospital D
+                availableDoctorsElement_D.innerText = totalAvailableDoctors;
+            })
+            .catch((error) => console.error(error));
+    });
+</script>
+
+</body>
+</html>

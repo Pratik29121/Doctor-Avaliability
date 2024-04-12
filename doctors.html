@@ -1,0 +1,149 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Doctor Details</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            background-color: #f5f5f5;
+            margin: 0;
+            padding: 0;
+        }
+
+        .container {
+            display: flex;
+            flex-wrap: wrap;
+            justify-content: center;
+            align-items: flex-start;
+            padding: 20px;
+        }
+
+        .doctor-card {
+            background-color: #fff;
+            border-radius: 8px;
+            box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+            margin: 20px;
+            width: 300px;
+            transition: transform 0.3s ease;
+        }
+
+        .doctor-card:hover {
+            transform: translateY(-5px);
+        }
+
+        .doctor-card h2 {
+            margin: 0;
+            padding: 20px 20px 10px;
+            font-size: 1.2em;
+            color: #333;
+            border-bottom: 1px solid #eee;
+        }
+
+        .doctor-card p {
+            margin: 0;
+            padding: 10px 20px;
+            font-size: 0.9em;
+            color: #666;
+        }
+
+        .status {
+            display: inline-block;
+            padding: 6px 12px;
+            border-radius: 5px;
+            font-size: 12px;
+            font-weight: bold;
+            text-transform: uppercase;
+        }
+
+        .available {
+            background-color: #4caf50;
+            color: #fff;
+        }
+
+        .not-available {
+            background-color: #f44336;
+            color: #fff;
+        }
+
+        #totalAvailable {
+            display: block;
+            margin-top: 20px;
+            padding: 10px;
+            text-align: center;
+            font-size: 1.1em;
+            color: #333;
+        }
+
+        h1 {
+            text-align: center;
+            margin-top: 40px;
+            color: #333;
+        }
+    </style>
+</head>
+<body>
+   <center><h1>Doctor Details <span id="totalAvailable"></span></h1></center> 
+    <div class="container">
+       
+        <div id="doctorDetails"></div>
+    </div>
+
+    <script>
+        const urlParams = new URLSearchParams(window.location.search);
+        const hospitalName = "hospital-1";
+
+        const myHeaders = new Headers();
+        myHeaders.append("X-Auth-Token", "BBUS-UdRnpATaqRPvRdGJvfNwOmq0InbR70");
+        myHeaders.append("Cookie", "__ubidots_ui=dXNlcm5hbWU9VE9LRU5fREVWSUNFXzMzMjkyOV82NjE0ZTM0NmRlYTgxYzMzZTNjZGI1Y2VfMTtwbGFuPWZyZWUtcGxhbg; ubidots-deployment=ubidots.aws.us");
+
+        const requestOptions = {
+            method: "GET",
+            headers: myHeaders,
+            redirect: "follow"
+        };
+
+        // Array of variable names
+        const variables = ['dr1', 'dr2', 'dr3', 'dr4'];
+
+        const doctorDetailsContainer = document.getElementById('doctorDetails');
+        const totalAvailableElement = document.getElementById('totalAvailable');
+        let totalAvailableDoctors = 0;
+
+        // Fetch details for each variable
+        variables.forEach(variable => {
+            fetch(`https://industrial.api.ubidots.com/api/v1.6/devices/${hospitalName}/${variable}/values/?page_size=1`, requestOptions)
+                .then((response) => response.json()) // Parse response as JSON
+                .then((data) => {
+                    // Calculate days ago for timestamp and created_at
+                    const timestampDaysAgo = Math.floor((Date.now() - data.results[0].timestamp) / (1000 * 60 * 60 * 24));
+                    const createdAtDaysAgo = Math.floor((Date.now() - data.results[0].created_at) / (1000 * 60 * 60 * 24));
+
+                    // Update total available doctors count
+                    if (data.results[0].value === 1) {
+                        totalAvailableDoctors++;
+                    }
+
+                    // Create status indicator based on availability
+                    const statusIndicator = data.results[0].value === 1 ? `<div class="status available">Available</div>` : `<div class="status not-available">Not Available</div>`;
+
+                    // Display doctor details with days ago format and status indicator
+                    const doctorDetails = `
+                        <div class="doctor-card">
+                            <h2>Nagpur - ${variable}</h2>
+                            <p>Doctor: ${statusIndicator}</p>
+                            <p>Timestamp: ${timestampDaysAgo} days ago</p>
+                            <p>Created At: ${createdAtDaysAgo} days ago</p>
+                        </div>
+                    `;
+                    doctorDetailsContainer.innerHTML += doctorDetails;
+
+                    // Update total available doctors count
+                    totalAvailableElement.innerText = `(${totalAvailableDoctors} Available)`;
+                })
+                .catch((error) => console.error(error));
+        });
+    </script>
+</body>
+</html>
